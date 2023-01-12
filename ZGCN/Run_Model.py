@@ -20,7 +20,8 @@ DEBUG = 'False'
 DATASET = '2020'
 DEVICE = 'cuda:0'
 MODEL = 'fire_GCN'
-
+load_model_dir = None
+load_model_dir = '/home/joel.chacon/tmp/supportScripts_Wildfire/WFZigZag/ZGCN/experiments/2020/2023011214453494032231075/best_model.pth'
 #get configuration
 config_file = '{}_{}.conf'.format(DATASET, MODEL)
 config = configparser.ConfigParser()
@@ -86,7 +87,7 @@ args.add_argument('--log_step', default=config['log']['log_step'], type=int)
 args.add_argument('--plot', default=config['log']['plot'], type=eval)
 
 args = args.parse_args()
-
+args.start_epoch=0
 
 
 args.dynamic_features = [
@@ -142,9 +143,9 @@ args.clc = 'vec'
 args.scaleParameter =  [0.1]
 args.sizeBorder = [6]
 args.maxDimHoles = [1]
-args.ZPI_dir = '/content//data/datasets_grl/'
-#args.ZPI_dir = '/home/joel.chacon/tmp/ZIGZAG_from_files/data/datasets_grl'
-args.ZPI_dir = '/home/joel.chacon/tmp/data/data/datasets_grl'
+##args.ZPI_dir = '/content//data/datasets_grl/'
+###args.ZPI_dir = '/home/joel.chacon/tmp/ZIGZAG_from_files/data/datasets_grl'
+##args.ZPI_dir = '/home/joel.chacon/tmp/data/data/datasets_grl'
 args.ZPI_dir = '../../TDAscripts/datasets_grl'
 
 
@@ -162,7 +163,9 @@ for p in model.parameters():
         nn.init.xavier_uniform_(p)
     else:
         nn.init.uniform_(p)
-print_model_parameters(model, only_num=False)
+
+if load_model_dir is None:
+   print_model_parameters(model, only_num=False)
 
 #loa dataset
 train_loader, val_loader, test_loader1, test_loader2 = get_dataloaders(args)
@@ -189,10 +192,25 @@ if args.lr_decay:
                                                         gamma=args.lr_decay_rate)
 
 #config log path
-current_time = datetime.now().strftime('%Y%m%d%H%M%S%f')+str(random.randint(0, 100000))
-current_dir = os.path.dirname(os.path.realpath(__file__))
-log_dir = os.path.join(current_dir,'experiments', args.dataset, current_time)
-args.log_dir = log_dir
+
+if load_model_dir is  None:
+   current_time = datetime.now().strftime('%Y%m%d%H%M%S%f')+str(random.randint(0, 100000))
+   current_dir = os.path.dirname(os.path.realpath(__file__))
+   log_dir = os.path.join(current_dir,'experiments', args.dataset, current_time)
+   args.log_dir = log_dir
+
+###TODO:  load an existing model
+if load_model_dir is not None:
+  check_point = torch.load(load_model_dir)
+  args = check_point['config']
+  model.load_state_dict(check_point['state_dict'])
+  optimizer.load_state_dict(check_point['optimizer'])
+  args.start_epoch = check_point['epoch']
+  loss = check_point['loss']
+  lr_scheduler = check_point['lr_scheduler']
+  model.to(args.device)
+
+
 
 #start training
 trainer = Trainer(model, loss, optimizer, train_loader, val_loader, test_loader1, test_loader2, scaler,
