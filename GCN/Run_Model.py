@@ -142,9 +142,10 @@ args.clc = 'vec'
 args.scaleParameter =  [0.1]
 args.sizeBorder = [6]
 args.maxDimHoles = [1]
-args.ZPI_dir = '/content//data/datasets_grl/'
-#args.ZPI_dir = '/home/joel.chacon/tmp/ZIGZAG_from_files/data/datasets_grl'
-args.ZPI_dir = '/home/joel.chacon/tmp/data/data/datasets_grl'
+##args.ZPI_dir = '/content//data/datasets_grl/'
+###args.ZPI_dir = '/home/joel.chacon/tmp/ZIGZAG_from_files/data/datasets_grl'
+##args.ZPI_dir = '/home/joel.chacon/tmp/data/data/datasets_grl'
+args.ZPI_dir = '../../TDAscripts/datasets_grl'
 
 
 init_seed(args.seed)

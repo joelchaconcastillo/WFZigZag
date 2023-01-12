@@ -13,7 +13,7 @@ from sklearn import metrics
 
 class Trainer(object):
     def __init__(self, model, loss, optimizer, train_loader, val_loader, test_loader1, test_loader2,
-                 scaler, args, lr_scheduler=None, path=None):
+                 scaler, args, lr_scheduler=None):
         super(Trainer, self).__init__()
         self.model = model
         self.loss = loss
@@ -29,10 +29,7 @@ class Trainer(object):
         self.minbatch_size = args.minbatch_size
         self.batch_size = args.batch_size
         self.train_per_epoch = len(train_loader)
-        self.start_epoch = 0
-        ############TODO: read an existent model
-        if path is not None:
-           self.load_checkpoint(path)
+        self.start_epoch = args.start_epoch
         #####################3
         if val_loader != None:
             self.val_per_epoch = len(val_loader)
@@ -134,6 +131,7 @@ class Trainer(object):
         val_loss_list = []
         start_time = time.time()
         for epoch in range(self.start_epoch, self.args.epochs + 1): # 总 epochs
+            self.current_epoch = epoch
             epoch_time = time.time()
             train_epoch_loss = self.train_epoch(epoch)
             self.logger.info('\nEpoch time elapsed: {}\n'.format(time.time() - epoch_time))
@@ -165,14 +163,16 @@ class Trainer(object):
             if best_state == True:
                 self.logger.info('*********************************Current best model saved!')
                 best_model = copy.deepcopy(self.model.state_dict())
-                torch.save(best_model, self.best_path)
+#                torch.save(best_model, self.best_path)
+                self.save_checkpoint()
 
             # apply the best model to test dataset
             # test
             self.model.load_state_dict(best_model)
             # self.val_epoch(self.args.epochs, self.test_loader)
-            self.test(self.model, self.args, self.test_loader1, self.scaler, self.logger)
-            self.test(self.model, self.args, self.test_loader2, self.scaler, self.logger)
+            if best_state == True:
+               self.test(self.model, self.args, self.test_loader1, self.scaler, self.logger)
+               self.test(self.model, self.args, self.test_loader2, self.scaler, self.logger)
 
 
         training_time = time.time() - start_time
@@ -194,7 +194,9 @@ class Trainer(object):
             'state_dict': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
             'config': self.args,
-            'epoch': self.epoch,
+            'loss' : self.loss,
+            'lr_scheduler' : self.lr_scheduler,
+            'epoch': self.current_epoch+1, ###it is saved at the end..
         }
         torch.save(state, self.best_path)
         self.logger.info("Saving current best model to " + self.best_path)
@@ -204,7 +206,7 @@ class Trainer(object):
         self.model.load_state_dict(check_point['state_dict'])
         self.optimizer.load_state_dict(check_point['optimizer'])
         self.start_epoch = check_point['epoch']
-        model.to(self.args.devices)
+        self.model.to(self.args.device)
 
     @staticmethod
     def test(model, args, data_loader, scaler, logger, path=None):
