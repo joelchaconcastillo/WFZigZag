@@ -1,0 +1,46 @@
+[data]
+num_nodes = 625
+lag = 10
+horizon = 1
+default_graph = True
+dataset_root = /content/datasets_grl1/datasets_grl/
+num_workers = 12
+pin_memory = False
+nan_fill = -1.0
+prefetch_factor = 2
+persistent_workers = True
+patch_width = 25
+patch_height = 25
+
+[model]
+input_dim = 25
+output_dim = 2
+embed_dim = 64
+rnn_units = 48
+num_layers = 1
+link_len = 2
+window_len = 10
+weight_decay = 0.0
+
+[train]
+loss_func = nllloss
+seed = 10000
+batch_size = 256
+minbatch_size = 64
+epochs = 30
+lr_init = 0.0001
+lr_decay = True
+lr_decay_rate = 0.1
+lr_decay_step = 30
+early_stop = True
+early_stop_patience = 8
+grad_norm = False
+max_grad_norm = 5
+real_value = True
+positive_weight = 0.5
+
+[test]
+
+[log]
+plot = False
+log_step = 1
