@@ -13,7 +13,7 @@ from sklearn import metrics
 
 class Trainer(object):
     def __init__(self, model, loss, optimizer, train_loader, val_loader, test_loader1, test_loader2,
-                 scaler, args, lr_scheduler=None):
+                 scaler, args, lr_scheduler=None, path=None):
         super(Trainer, self).__init__()
         self.model = model
         self.loss = loss
@@ -29,6 +29,11 @@ class Trainer(object):
         self.minbatch_size = args.minbatch_size
         self.batch_size = args.batch_size
         self.train_per_epoch = len(train_loader)
+        self.start_epoch = 0
+        ############TODO: read an existent model
+        if path is not None:
+           self.load_checkpoint(path)
+        #####################3
         if val_loader != None:
             self.val_per_epoch = len(val_loader)
         self.best_path = os.path.join(self.args.log_dir, 'best_model.pth')
@@ -128,7 +133,7 @@ class Trainer(object):
         train_loss_list = []
         val_loss_list = []
         start_time = time.time()
-        for epoch in range(1, self.args.epochs + 1): # 总 epochs
+        for epoch in range(self.start_epoch, self.args.epochs + 1): # 总 epochs
             epoch_time = time.time()
             train_epoch_loss = self.train_epoch(epoch)
             self.logger.info('\nEpoch time elapsed: {}\n'.format(time.time() - epoch_time))
@@ -188,10 +193,18 @@ class Trainer(object):
         state = {
             'state_dict': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
-            'config': self.args
+            'config': self.args,
+            'epoch': self.epoch,
         }
         torch.save(state, self.best_path)
         self.logger.info("Saving current best model to " + self.best_path)
+    def load_checkpoint(self, path): ##TODO
+        check_point = torch.load(path)
+        self.args = check_point['config']
+        self.model.load_state_dict(check_point['state_dict'])
+        self.optimizer.load_state_dict(check_point['optimizer'])
+        self.start_epoch = check_point['epoch']
+        model.to(self.args.devices)
 
     @staticmethod
     def test(model, args, data_loader, scaler, logger, path=None):
