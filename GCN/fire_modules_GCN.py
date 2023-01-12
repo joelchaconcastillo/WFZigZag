@@ -38,7 +38,6 @@ class CNN(nn.Module):
           nn.ReLU(inplace=True),
           nn.MaxPool2d(kernel_size=3, stride=2),
       )
-      #self.maxpool = nn.MaxPool2d(2,2)
       self.maxpool = nn.AdaptiveMaxPool2d((1,1))
 
    def forward(self, graph):
@@ -276,8 +275,6 @@ class GCN(nn.Module):
       # fully-connected
       x = torch.flatten(x, 1) ##B, hidden*12*12 (4608)
       x = (self.drop1(self.fc1(x)))  ##B, 64
-#      x = F.relu(self.drop1(self.fc1(x)))  ##B, 64
-      #x = F.relu(self.fc1(x))  ##B, 64
 
 #      x = F.relu(self.drop2(self.fc2(x)))  ##B, 32
       #x = F.relu(self.fc2(x))  ##B, 32
